@@ -1,0 +1,63 @@
+/* ============================================
+   style.css — Shared App Styles
+   Label Print System | Bootstrap 5.3
+   ============================================ */
+
+body {
+  background: #f0f2f5;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+/* Table */
+.table thead th {
+  background: #2c3e50;
+  color: #fff;
+  font-size: .85rem;
+  border: none;
+}
+
+.table tbody tr:hover {
+  background: #eef2ff;
+}
+
+/* Badges */
+.badge-ems  { background: #0d6efd; }
+.badge-none { background: #6c757d; }
+
+/* Print button (navbar) */
+.btn-print-sel {
+  background: #e74c3c;
+  color: #fff;
+  font-weight: 600;
+}
+.btn-print-sel:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+/* Selected row highlight */
+.selected-row {
+  background: #fff3cd !important;
+}
+
+/* Search box max-width */
+.search-box {
+  max-width: 380px;
+}
+
+/* Pagination pill */
+.pagination .page-link {
+  border-radius: 8px !important;
+  margin: 0 2px;
+}

@@ -1,0 +1,7 @@
+# .gitignore
+label_billing.csv
+includes/config.php
+{css,js,includes}/
+mysql_data/
+vendor/
+.env
