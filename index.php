@@ -62,30 +62,34 @@ if (isset($_POST['del'])) {
 <title><?= APP_NAME ?></title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14/dist/handsontable.full.min.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-dark" style="background:#2c3e50;">
-  <div class="container-fluid">
-    <span class="navbar-brand"><i class="bi bi-printer-fill me-2"></i><?= APP_NAME ?></span>
-    <div class="d-flex align-items-center gap-3">
-      <span class="text-white-50 small">Ricoh IM C2010 | Label A15</span>
-      <?php if ($selectedCount > 0): ?>
-      <a href="print_preview.php" target="_blank"
-         class="btn btn-sm btn-print-sel">
-        <i class="bi bi-printer me-1"></i>พิมพ์ที่เลือก (<?= $selectedCount ?>)
-      </a>
-      <?php endif; ?>
-      <form method="post" class="d-inline"
-            onsubmit="return confirm('ล้างรายการที่เลือกทั้งหมด?')">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-        <button type="submit" name="clear_all" value="1" class="btn btn-sm btn-outline-light">
-          <i class="bi bi-x-circle me-1"></i>ล้างทั้งหมด
-        </button>
-      </form>
+<nav class="app-navbar">
+  <a href="index.php" class="brand">
+    <span class="brand-icon"><i class="bi bi-printer-fill"></i></span>
+    <div>
+      <div><?= APP_NAME ?></div>
+      <div class="subtitle">Ricoh IM C2010 &bull; Label 50&times;80 mm</div>
     </div>
+  </a>
+  <div class="d-flex align-items-center gap-2">
+    <span id="selectedBadge" class="badge rounded-pill bg-warning text-dark" style="font-size:.72rem;<?= $selectedCount == 0 ? 'display:none' : '' ?>">
+      <?= $selectedCount ?> รายการ
+    </span>
+    <a href="print_preview.php" target="_blank" class="btn-nav btn-nav-print">
+      <i class="bi bi-printer"></i> พิมพ์ที่เลือก
+    </a>
+    <form method="post" class="d-inline"
+          onsubmit="return confirm('ล้างรายการที่เลือกทั้งหมด?')">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+      <button type="submit" name="clear_all" value="1" class="btn-nav btn-nav-clear">
+        <i class="bi bi-x-circle"></i> ล้างทั้งหมด
+      </button>
+    </form>
   </div>
 </nav>
 
@@ -93,151 +97,308 @@ if (isset($_POST['del'])) {
 
 <div class="container-fluid py-4">
 
-  <!-- Summary Cards -->
+  <!-- Stat Cards -->
+  <?php $emsCount = (int)$db->query("SELECT COUNT(*) FROM label_billing WHERE ems != ''")->fetchColumn(); ?>
   <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="card p-3 text-center">
-        <div class="fs-2 fw-bold text-primary"><?= number_format($totalRows) ?></div>
-        <div class="text-muted small">รายชื่อทั้งหมด</div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <div class="stat-value"><?= number_format($totalRows) ?></div>
+          <div class="stat-label">รายชื่อทั้งหมด</div>
+        </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card p-3 text-center">
-        <div class="fs-2 fw-bold text-warning"><?= number_format($selectedCount) ?></div>
-        <div class="text-muted small">เลือกพิมพ์</div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon amber"><i class="bi bi-check2-square"></i></div>
+        <div>
+          <div class="stat-value" id="statSelected"><?= number_format($selectedCount) ?></div>
+          <div class="stat-label">เลือกพิมพ์</div>
+        </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card p-3 text-center">
-        <?php $emsCount = (int)$db->query("SELECT COUNT(*) FROM label_billing WHERE ems='EMS'")->fetchColumn(); ?>
-        <div class="fs-2 fw-bold text-info"><?= number_format($emsCount) ?></div>
-        <div class="text-muted small">ส่ง EMS</div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon teal"><i class="bi bi-send-fill"></i></div>
+        <div>
+          <div class="stat-value"><?= number_format($emsCount) ?></div>
+          <div class="stat-label">มีประเภทส่ง</div>
+        </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card p-3 text-center">
-        <div class="fs-2 fw-bold text-success"><?= $totalPages ?></div>
-        <div class="text-muted small">หน้าทั้งหมด</div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon violet"><i class="bi bi-files"></i></div>
+        <div>
+          <div class="stat-value"><?= $totalPages ?></div>
+          <div class="stat-label">หน้าทั้งหมด</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-body">
-
-      <!-- Toolbar -->
-      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <form method="get" class="d-flex search-box gap-2">
-          <input type="text" name="search" class="form-control form-control-sm"
+  <div class="main-card">
+    <!-- Toolbar -->
+    <div class="main-card-toolbar">
+      <form method="get" class="d-flex align-items-center gap-2">
+        <div class="search-wrap">
+          <input type="text" name="search" class="form-control"
                  placeholder="ค้นหา บริษัท / ชื่อ / ที่อยู่..."
                  value="<?= htmlspecialchars($search) ?>">
-          <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
-          <?php if ($search): ?>
-          <a href="index.php" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i></a>
-          <?php endif; ?>
-        </form>
-        <div class="d-flex gap-2">
-          <button onclick="selectAllPage(true)"  class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-check-all"></i> เลือกหน้านี้
-          </button>
-          <button onclick="selectAllPage(false)" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-x-square"></i> ยกเลิกหน้านี้
-          </button>
-          <a href="edit.php" class="btn btn-sm btn-success">
-            <i class="bi bi-plus-lg"></i> เพิ่มรายชื่อ
-          </a>
+          <button class="btn-search"><i class="bi bi-search"></i></button>
         </div>
+        <?php if ($search): ?>
+        <a href="index.php" class="btn-clear-search"><i class="bi bi-x-lg"></i></a>
+        <?php endif; ?>
+      </form>
+      <div class="d-flex gap-2 flex-wrap">
+        <button onclick="selectAllPage(true)"  class="btn-toolbar btn btn-outline-primary">
+          <i class="bi bi-check-all"></i> &nbsp;&nbsp;เลือกหน้านี้
+        </button>
+        <button onclick="selectAllPage(false)" class="btn-toolbar btn btn-outline-secondary">
+          <i class="bi bi-x-square"></i> &nbsp;&nbsp;ยกเลิก
+        </button>
+        <a href="edit.php" class="btn-toolbar btn btn-success">
+          <i class="bi bi-plus-lg me-1"></i>เพิ่มรายชื่อ
+        </a>
       </div>
+    </div>
 
-      <!-- Table -->
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0" id="mainTable">
-          <thead>
-            <tr>
-              <th width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
-              <th>บริษัท / ลูกค้า</th>
-              <th>ผู้ติดต่อ / ตำแหน่ง</th>
-              <th>ที่อยู่</th>
-              <th>EMS</th>
-              <th>หมายเหตุ</th>
-              <th width="120">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($rows as $r): ?>
-          <tr class="<?= $r['is_selected'] ? 'selected-row' : '' ?>" id="row-<?= $r['id'] ?>">
-            <td>
-              <input type="checkbox" class="form-check-input row-check"
-                     data-id="<?= $r['id'] ?>"
-                     <?= $r['is_selected'] ? 'checked' : '' ?>>
-            </td>
-            <td>
-              <div class="fw-semibold"><?= htmlspecialchars($r['company'] ?? '') ?></div>
-            </td>
-            <td>
-              <div><?= htmlspecialchars($r['contact'] ?? '') ?></div>
-              <?php if ($r['position']): ?>
-              <div class="text-muted small"><?= htmlspecialchars($r['position']) ?></div>
-              <?php endif; ?>
-            </td>
-            <td>
-              <div class="text-muted small" style="max-width:280px">
-                <?= htmlspecialchars($r['address'] ?? '') ?>
-              </div>
-            </td>
-            <td>
-              <?php if ($r['ems']): ?>
-              <span class="badge badge-ems"><?= htmlspecialchars($r['ems']) ?></span>
-              <?php else: ?>
-              <span class="text-muted">-</span>
-              <?php endif; ?>
-            </td>
-            <td>
-              <span class="text-muted small"><?= htmlspecialchars($r['billing_note'] ?? '') ?></span>
-            </td>
-            <td>
-              <a href="edit.php?id=<?= $r['id'] ?>" class="btn btn-xs btn-outline-primary btn-sm py-0 px-2">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <a href="print_single.php?id=<?= $r['id'] ?>" target="_blank"
-                 class="btn btn-xs btn-outline-danger btn-sm py-0 px-2">
-                <i class="bi bi-printer"></i>
-              </a>
-              <form method="post" class="d-inline"
-                    onsubmit="return confirm('ลบรายการนี้?')">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                <input type="hidden" name="del" value="<?= $r['id'] ?>">
-                <button type="submit" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-2">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
+      <!-- Handsontable -->
+      <div id="hot-container"></div>
 
       <!-- Pagination -->
-      <?php if ($totalPages > 1): ?>
-      <nav class="mt-3">
-        <ul class="pagination pagination-sm justify-content-center">
-          <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-          <li class="page-item <?= $p == $page ? 'active' : '' ?>">
-            <a class="page-link" href="?page=<?= $p ?>&search=<?= urlencode($search) ?>"><?= $p ?></a>
-          </li>
-          <?php endfor; ?>
-        </ul>
-      </nav>
+      <?php if ($totalPages > 1):
+        $qs   = $search !== '' ? '&search=' . urlencode($search) : '';
+        $prev = max(1, $page - 1);
+        $next = min($totalPages, $page + 1);
+
+        /* build page-number list with ellipsis */
+        $pages = [];
+        for ($p = 1; $p <= $totalPages; $p++) {
+            if ($p === 1 || $p === $totalPages
+                || ($p >= $page - 2 && $p <= $page + 2)) {
+                $pages[] = $p;
+            } elseif (end($pages) !== '…') {
+                $pages[] = '…';
+            }
+        }
+      ?>
+      <div class="px-3 py-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:#fafbfd">
+        <span class="co-detail">
+          แสดง <?= number_format(min($offset+1,$totalRows)) ?>–<?= number_format(min($offset+$limit,$totalRows)) ?>
+          จาก <strong><?= number_format($totalRows) ?></strong> รายการ
+          &nbsp;|&nbsp; หน้า <?= $page ?> / <?= $totalPages ?>
+        </span>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+
+            <!-- First -->
+            <li class="page-item <?= $page === 1 ? 'disabled' : '' ?>">
+              <a class="page-link" href="?page=1<?= $qs ?>" title="หน้าแรก">
+                <i class="bi bi-chevron-double-left"></i>
+              </a>
+            </li>
+            <!-- Prev -->
+            <li class="page-item <?= $page === 1 ? 'disabled' : '' ?>">
+              <a class="page-link" href="?page=<?= $prev ?><?= $qs ?>" title="ก่อนหน้า">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+
+            <?php foreach ($pages as $p): ?>
+              <?php if ($p === '…'): ?>
+              <li class="page-item disabled">
+                <span class="page-link px-2" style="min-width:auto">&hellip;</span>
+              </li>
+              <?php else: ?>
+              <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $p ?><?= $qs ?>"><?= $p ?></a>
+              </li>
+              <?php endif; ?>
+            <?php endforeach; ?>
+
+            <!-- Next -->
+            <li class="page-item <?= $page === $totalPages ? 'disabled' : '' ?>">
+              <a class="page-link" href="?page=<?= $next ?><?= $qs ?>" title="ถัดไป">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+            <!-- Last -->
+            <li class="page-item <?= $page === $totalPages ? 'disabled' : '' ?>">
+              <a class="page-link" href="?page=<?= $totalPages ?><?= $qs ?>" title="หน้าสุดท้าย">
+                <i class="bi bi-chevron-double-right"></i>
+              </a>
+            </li>
+
+          </ul>
+        </nav>
+      </div>
       <?php endif; ?>
 
-    </div>
   </div>
 </div>
 
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/handsontable@14/dist/handsontable.full.min.js"></script>
+<script>
+// ── PHP data → JS ────────────────────────────────────
+const tableData  = <?= json_encode(array_values($rows), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+const CSRF_TOKEN = '<?= csrf_token() ?>';
+
+// ── helpers ──────────────────────────────────────────
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function getInitials(name) {
+  if (!name) return 'N/A';
+  const w = name.trim().split(/\s+/).filter(Boolean);
+  return w.length >= 2
+    ? (w[0][0] + w[1][0]).toUpperCase()
+    : name.trim().substring(0, 2).toUpperCase();
+}
+
+// ── HOT source data ──────────────────────────────────
+const hotData = tableData.map(r => ({
+  selected:     r.is_selected == 1,
+  company:      r.company      || '',
+  contact:      r.contact      || '',
+  position:     r.position     || '',
+  address:      r.address      || '',
+  ems:          r.ems          || '',
+  billing_note: r.billing_note || '',
+  id:           r.id
+}));
+
+// ── Custom renderers ─────────────────────────────────
+function companyRenderer(hot, TD, row) {
+  const d = hotData[row];
+  if (!d) return TD;
+  TD.innerHTML = `<div class="d-flex align-items-center gap-2 py-1">
+    <span class="co-avatar">${esc(getInitials(d.company))}</span>
+    <span class="co-name">${esc(d.company)}</span>
+  </div>`;
+  return TD;
+}
+
+function contactRenderer(hot, TD, row) {
+  const d = hotData[row];
+  if (!d) return TD;
+  TD.innerHTML = `<div class="co-name">${esc(d.contact)}</div>
+    ${d.position ? `<div class="co-detail">${esc(d.position)}</div>` : ''}`;
+  return TD;
+}
+
+function addressRenderer(hot, TD, row) {
+  const d = hotData[row];
+  if (!d) return TD;
+  TD.innerHTML = `<div class="co-detail hot-addr">${esc(d.address)}</div>`;
+  return TD;
+}
+
+function emsRenderer(hot, TD, row, col, prop, value) {
+  TD.innerHTML = value
+    ? `<span class="tag-ems">${esc(value)}</span>`
+    : `<span class="co-detail">—</span>`;
+  return TD;
+}
+
+function noteRenderer(hot, TD, row, col, prop, value) {
+  TD.innerHTML = value
+    ? `<span class="tag-billing">${esc(value)}</span>`
+    : `<span class="co-detail">—</span>`;
+  return TD;
+}
+
+function actionsRenderer(hot, TD, row, col, prop, value) {
+  TD.innerHTML = `
+    <div class="d-flex gap-1">
+      <a href="edit.php?id=${value}" class="btn-act btn-act-edit" title="แก้ไข"><i class="bi bi-pencil"></i></a>
+      <a href="print_single.php?id=${value}" target="_blank" class="btn-act btn-act-print" title="พิมพ์"><i class="bi bi-printer"></i></a>
+      <button class="btn-act btn-act-delete" data-action="delete" data-id="${value}" title="ลบ"><i class="bi bi-trash"></i></button>
+    </div>`;
+  return TD;
+}
+
+// ── Init Handsontable ────────────────────────────────
+const hot = new Handsontable(document.getElementById('hot-container'), {
+  data:          hotData,
+  licenseKey:    'non-commercial-and-evaluation',
+  height:        'auto',
+  rowHeaders:    false,
+  colHeaders:    ['', 'บริษัท / ลูกค้า', 'ผู้ติดต่อ', 'ที่อยู่', 'ประเภท', 'หมายเหตุ', 'จัดการ'],
+  rowHeights:    52,
+  columns: [
+    { data: 'selected',     type: 'checkbox',             width: 44 },
+    { data: 'company',      renderer: companyRenderer,    readOnly: true, width: 315 },
+    { data: 'contact',      renderer: contactRenderer,    readOnly: true, width: 200 },
+    { data: 'address',      renderer: addressRenderer,    readOnly: true, width: 400 },
+    { data: 'ems',          renderer: emsRenderer,        readOnly: true, width: 100 },
+    { data: 'billing_note', renderer: noteRenderer,       readOnly: true, width: 130 },
+    { data: 'id',           renderer: actionsRenderer,    readOnly: true, width: 30 },
+  ],
+  stretchH:               'last',
+  manualColumnResize:     true,
+  contextMenu:            false,
+  copyPaste:              false,
+  outsideClickDeselects:  true,
+  cells(row) {
+    return hotData[row]?.selected ? { className: 'hot-row-sel' } : {};
+  },
+  afterChange(changes, source) {
+    if (!changes || source === 'external') return;
+    changes.forEach(([row, prop, , newVal]) => {
+      if (prop !== 'selected') return;
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle', id: hotData[row].id, val: newVal ? 1 : 0 })
+      });
+      updateBadge();
+    });
+  },
+});
+
+// ── Delete via event delegation ──────────────────────
+document.getElementById('hot-container').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action="delete"]');
+  if (!btn) return;
+  if (!confirm('ลบรายการนี้?')) return;
+  fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete', id: +btn.dataset.id, csrf: CSRF_TOKEN })
+  }).then(r => r.json()).then(d => { if (d.ok) location.reload(); });
+});
+
+// ── Select all / none on page ────────────────────────
+function selectAllPage(checked) {
+  const changes = hotData.map((_, i) => [i, 'selected', checked]);
+  hot.setDataAtRowProp(changes, 'external');
+  fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'toggle_many', ids: hotData.map(r => r.id), val: checked ? 1 : 0 })
+  }).then(() => updateBadge());
+}
+
+// ── Sync badge + stat card ───────────────────────────
+function updateBadge() {
+  fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'count' })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const badge = document.getElementById('selectedBadge');
+    if (badge) { badge.textContent = d.count + ' รายการ'; badge.style.display = d.count > 0 ? '' : 'none'; }
+    const stat = document.getElementById('statSelected');
+    if (stat) stat.textContent = d.count.toLocaleString();
+  });
+}
+</script>
 </body>
 </html>

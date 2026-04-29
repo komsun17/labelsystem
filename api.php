@@ -40,6 +40,19 @@ switch ($action) {
         echo json_encode(['count' => (int)$count]);
         break;
 
+    // Delete a record (AJAX with CSRF)
+    case 'delete':
+        $id    = (int)($body['id']   ?? 0);
+        $token = (string)($body['csrf'] ?? '');
+        if ($id <= 0 || !csrf_verify_token($token)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden']);
+            break;
+        }
+        $db->prepare("DELETE FROM label_billing WHERE id=?")->execute([$id]);
+        echo json_encode(['ok' => true]);
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Unknown action']);

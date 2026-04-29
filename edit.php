@@ -62,23 +62,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<nav class="navbar navbar-dark" style="background:#2c3e50;">
-  <div class="container">
-    <a class="navbar-brand" href="index.php">
-      <i class="bi bi-arrow-left me-2"></i><?= APP_NAME ?>
-    </a>
-  </div>
+<nav class="app-navbar">
+  <a href="index.php" class="brand">
+    <span class="brand-icon"><i class="bi bi-arrow-left"></i></span>
+    <div>
+      <div><?= APP_NAME ?></div>
+      <div class="subtitle"><?= $record['id'] ? 'แก้ไขรายชื่อ' : 'เพิ่มรายชื่อใหม่' ?></div>
+    </div>
+  </a>
 </nav>
 
 <div class="container py-4" style="max-width:700px">
-  <div class="card">
-    <div class="card-header bg-white border-0 pt-4 pb-0">
-      <h5 class="fw-bold">
-        <i class="bi bi-<?= $record['id'] ? 'pencil-square' : 'plus-circle' ?> me-2 text-primary"></i>
-        <?= $record['id'] ? 'แก้ไขรายชื่อ' : 'เพิ่มรายชื่อใหม่' ?>
-      </h5>
+  <div class="card main-card">
+    <div class="edit-header">
+      <div class="d-flex align-items-center justify-content-between">
+        <h5><i class="bi bi-<?= $record['id'] ? 'pencil-square' : 'plus-circle' ?> me-2"></i><?= $record['id'] ? 'แก้ไขรายชื่อ' : 'เพิ่มรายชื่อใหม่' ?></h5>
+        <a href="index.php" class="back-link"><i class="bi bi-x-lg"></i></a>
+      </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-4">
 
       <?php foreach ($errors as $e): ?>
       <div class="alert alert-danger py-2"><?= htmlspecialchars($e) ?></div>
@@ -86,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <form method="post">
         <div class="mb-3">
-          <label class="form-label fw-semibold">ชื่อบริษัท / Company <span class="text-danger">*</span></label>
+          <label class="form-label">ชื่อบริษัท / Company <span class="text-danger">*</span></label>
           <input type="text" name="company" class="form-control"
                  value="<?= htmlspecialchars($_POST['company'] ?? $record['company']) ?>"
                  placeholder="THAI MIYAKE FORGING CO., LTD.">
@@ -94,27 +96,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">ชื่อผู้ติดต่อ / Contact</label>
+            <label class="form-label">ชื่อผู้ติดต่อ / Contact</label>
             <input type="text" name="contact" class="form-control"
                    value="<?= htmlspecialchars($_POST['contact'] ?? $record['contact']) ?>"
                    placeholder="ACCOUNTING DEPARTMENT">
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold">ตำแหน่ง / Position</label>
+            <label class="form-label">ตำแหน่ง / Position</label>
             <input type="text" name="position" class="form-control"
                    value="<?= htmlspecialchars($_POST['position'] ?? $record['position']) ?>">
           </div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label fw-semibold">ที่อยู่ / Address</label>
+          <label class="form-label">ที่อยู่ / Address</label>
           <textarea name="address" class="form-control" rows="3"
                     placeholder="เลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์"><?= htmlspecialchars($_POST['address'] ?? $record['address']) ?></textarea>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">ประเภทจัดส่ง / EMS</label>
+            <label class="form-label">ประเภทจัดส่ง / EMS</label>
             <select name="ems" class="form-select">
               <option value="">-- ไม่ระบุ --</option>
               <?php foreach (['EMS','ลงทะเบียน','พัสดุ','ไปรษณีย์ธรรมดา'] as $opt): ?>
@@ -125,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </select>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold">หมายเหตุ / Note</label>
+            <label class="form-label">หมายเหตุ / Note</label>
             <select name="billing_note" class="form-select">
               <option value="">-- ไม่ระบุ --</option>
               <?php foreach (['BILLING NOTE','TAX INVOICE','RECEIPT','QUOTATION'] as $opt): ?>
@@ -137,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 pt-2 border-top">
           <button type="submit" class="btn btn-primary px-4">
             <i class="bi bi-save me-1"></i>บันทึก
           </button>

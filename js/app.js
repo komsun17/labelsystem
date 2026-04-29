@@ -40,7 +40,6 @@ function selectAllPage(checked) {
 }
 
 function updateBadge() {
-  // Reload to sync navbar count with DB state
   fetch('api.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -49,8 +48,11 @@ function updateBadge() {
     .then(r => r.json())
     .then(data => {
       const badge = document.getElementById('selectedBadge');
-      if (badge) badge.textContent = data.count;
-      const btn = document.getElementById('printBtn');
-      if (btn) btn.style.display = data.count > 0 ? '' : 'none';
+      if (badge) {
+        badge.textContent = data.count + ' รายการ';
+        badge.style.display = data.count > 0 ? '' : 'none';
+      }
+      const statSel = document.getElementById('statSelected');
+      if (statSel) statSel.textContent = data.count.toLocaleString();
     });
 }
