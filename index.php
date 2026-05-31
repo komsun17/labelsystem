@@ -103,6 +103,9 @@ if (isset($_POST['del'])) {
       </button>
     </form>
     <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
+    <a href="manual.php" class="btn-nav btn-nav-clear" title="คู่มือการใช้งาน">
+      <i class="bi bi-question-circle"></i>
+    </a>
     <a href="logout.php" class="btn-nav btn-nav-clear" title="ออกจากระบบ"
        onclick="return confirm('ออกจากระบบ?')">
       <i class="bi bi-box-arrow-right"></i>

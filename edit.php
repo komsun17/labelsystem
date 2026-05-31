@@ -19,8 +19,10 @@ if ($id > 0) {
     $stmt = $db->prepare("SELECT * FROM label_billing WHERE id=?");
     $stmt->execute([$id]);
     $found = $stmt->fetch();
-    if ($found) $record = $found;
-    else { header('Location: index.php'); exit; }
+    if ($found) {
+        $record = $found;
+        if (($record['company'] ?? '') === 'N/A') $record['company'] = '';
+    } else { header('Location: index.php'); exit; }
 }
 
 // ── Handle Save ──────────────────────────────
@@ -102,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="form-label">ชื่อบริษัท / Company <span class="text-danger">*</span></label>
           <input type="text" name="company" class="form-control"
                  value="<?= htmlspecialchars($_POST['company'] ?? $record['company']) ?>"
-                 placeholder="THAI MIYAKE FORGING CO., LTD.">
+                 placeholder="">
         </div>
 
         <div class="row g-3 mb-3">
