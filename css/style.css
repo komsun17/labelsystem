@@ -444,3 +444,20 @@ body {
 #hot-container .handsontable .manualColumnResizer {
   background: var(--primary-border);
 }
+
+/* ── Sticky Action Bar ── */
+.action-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #1e293b;
+  padding: .75rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.25);
+  z-index: 500;
+  animation: slideUp .2s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+/* เพิ่ม padding-bottom ให้ body กันเนื้อหาถูก bar บัง */
+body.has-action-bar { padding-bottom: 64px; }

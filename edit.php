@@ -3,6 +3,7 @@
 // edit.php - Add / Edit Customer Record
 // ============================================
 require_once 'includes/config.php';
+auth_check();
 
 $db = getDB();
 $id = (int)($_GET['id'] ?? 0);
@@ -27,6 +28,11 @@ $errors  = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_verify()) {
+        http_response_code(403);
+        die('Invalid CSRF token');
+    }
+
     $company      = trim($_POST['company']      ?? '');
     $contact      = trim($_POST['contact']      ?? '');
     $position     = trim($_POST['position']     ?? '');
@@ -70,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="subtitle"><?= $record['id'] ? 'แก้ไขรายชื่อ' : 'เพิ่มรายชื่อใหม่' ?></div>
     </div>
   </a>
+  <a href="logout.php" class="btn-nav btn-nav-clear" title="ออกจากระบบ"
+     onclick="return confirm('ออกจากระบบ?')">
+    <i class="bi bi-box-arrow-right"></i>
+  </a>
 </nav>
 
 <div class="container py-4" style="max-width:700px">
@@ -87,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endforeach; ?>
 
       <form method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
         <div class="mb-3">
           <label class="form-label">ชื่อบริษัท / Company <span class="text-danger">*</span></label>
           <input type="text" name="company" class="form-control"

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS label_billing (
     contact     VARCHAR(100)  DEFAULT NULL COMMENT 'ชื่อผู้ติดต่อ',
     position    VARCHAR(255)  DEFAULT NULL COMMENT 'ตำแหน่ง',
     company     VARCHAR(100)  DEFAULT NULL COMMENT 'ชื่อบริษัท',
-    address     VARCHAR(255)  DEFAULT NULL COMMENT 'ที่อยู่',
+    address     TEXT          DEFAULT NULL COMMENT 'ที่อยู่',
     is_selected TINYINT(1)    DEFAULT 0   COMMENT 'เลือกพิมพ์ (0=ไม่เลือก, 1=เลือก)',
     ems         VARCHAR(50)   DEFAULT NULL COMMENT 'ประเภทจัดส่ง (EMS/ฯลฯ)',
     billing_note VARCHAR(255) DEFAULT NULL COMMENT 'หมายเหตุ (Billing Note / Tax Invoice)',
@@ -24,6 +24,12 @@ CREATE TABLE IF NOT EXISTS label_billing (
     INDEX idx_selected (is_selected),
     FULLTEXT INDEX ft_search (company, contact, address)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Migration: address VARCHAR(255) → TEXT
+-- Run once on existing installations:
+-- ALTER TABLE label_billing MODIFY address TEXT DEFAULT NULL COMMENT 'ที่อยู่';
+-- ============================================
 
 -- ============================================
 -- Import data from Access export (CSV)

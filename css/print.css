@@ -1,165 +1,273 @@
 /* ============================================
-   print.css — Label Print Styles
-   Ricoh IM C2010 | Label A15 (50×80mm)
-   Sheet: 100mm × 320mm | Grid: 2 cols × 4 rows
+   print.css — Mailing Label Styles
+   Elephant No.A15 | 50×80 mm (วางแนวนอน)
+   A4 portrait (210×297mm)
+   Cell: 80mm(W) × 50mm(H) | 2 cols × 4 rows = 8/sheet
+   Margin: 25mm H, 48.5mm V
+   Font: Century Gothic
    ============================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'TH Sarabun New', 'Sarabun', 'Tahoma', sans-serif;
+  font-family: 'Century Gothic', 'CenturyGothic', 'Futura',
+               'Trebuchet MS', 'Century', 'AppleGothic', sans-serif;
 }
 
-/* ── Screen preview ── */
+/* ════════════════════════════════
+   SCREEN — Toolbar & Preview
+   ════════════════════════════════ */
 @media screen {
-  body { background: #e0e0e0; padding: 20px; }
+  body {
+    background: #d1d5db;
+    padding: 64px 24px 40px;
+  }
 
   .toolbar {
-    position: fixed; top: 0; left: 0; right: 0;
-    background: #2c3e50; color: #fff;
-    padding: 10px 20px;
-    display: flex; align-items: center; gap: 16px;
-    z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: linear-gradient(120deg, #1e293b 0%, #0f172a 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    z-index: 999;
+    box-shadow: 0 2px 12px rgba(0,0,0,.35);
   }
 
-  .toolbar button {
-    padding: 6px 18px; border: none; border-radius: 6px;
-    font-size: 14px; cursor: pointer; font-weight: 600;
+  .toolbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    color: #fff;
+    margin-right: 4px;
+  }
+  .toolbar-brand i { font-size: 16px; color: #818cf8; }
+
+  .toolbar-badge {
+    background: rgba(255,255,255,.12);
+    color: rgba(255,255,255,.7);
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.12);
   }
 
-  .btn-print { background: #e74c3c; color: #fff; }
-  .btn-close  { background: #7f8c8d; color: #fff; }
+  .toolbar-sep  { flex: 1; }
+
+  .toolbar-info {
+    font-size: 11px;
+    color: rgba(255,255,255,.45);
+    margin-right: 4px;
+  }
+
+  .btn-toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+  }
+  .btn-toolbar i { font-size: 14px; }
+
+  .btn-print         { background: #4f46e5; color: #fff; }
+  .btn-print:hover   { background: #4338ca; }
+
+  .btn-close-tb {
+    background: rgba(255,255,255,.1);
+    color: rgba(255,255,255,.75);
+    border: 1px solid rgba(255,255,255,.15);
+  }
+  .btn-close-tb:hover { background: rgba(255,255,255,.18); color: #fff; }
 
   .sheets-container {
-    margin-top: 60px;
-    display: flex; flex-direction: column; gap: 24px;
-    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .sheet-label {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    letter-spacing: .5px;
+    text-align: center;
   }
 
   .sheet {
     background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,.15);
-    border-radius: 4px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18), 0 1px 4px rgba(0,0,0,.1);
+    border-radius: 3px;
+    outline: 1px solid #d1d5db;
   }
+
+  .label-cell { border: 1px dashed #c4cdd8; }
+  .label-empty { background: #f9fafb; }
 }
 
-/* ── Print layout ── */
+/* ════════════════════════════════
+   PRINT
+   ════════════════════════════════ */
 @media print {
   @page {
-    size: 100mm 320mm;  /* ตรงกับ sheet: 2×50mm cols × 4×80mm rows */
-    margin: 0;
+    size: A4 portrait;         /* 210mm × 297mm                    */
+    margin: 48.5mm 25mm;      /* V: (297-200)/2  H: (210-160)/2   */
   }
 
-  body { background: white; }
-  .toolbar { display: none !important; }
+  body          { background: white; }
+  .toolbar      { display: none !important; }
+  .sheet-label  { display: none; }
 
-  .sheet {
-    page-break-after: always;
-  }
+  .sheets-container { gap: 0; }
+  .sheet-wrap       { page-break-after: always; }
+  .sheet-wrap:last-child { page-break-after: avoid; }
 
-  .sheet:last-child {
-    page-break-after: avoid;
-  }
-
-  .label-cell { border: none; }
-  .label-empty { background: white; }
+  .label-cell   { border: none; }
+  .label-empty  { background: white; }
+  .label-number { display: none; }
 }
 
-/* ── Sheet grid: 100mm × 320mm = 2×50mm cols, 4×80mm rows ── */
+/* ════════════════════════════════
+   SHEET GRID
+   Content area: 160mm × 200mm
+   (2 cols × 80mm) × (4 rows × 50mm)
+   ════════════════════════════════ */
 .sheet {
-  width: 100mm;
-  height: 320mm;
+  width:  160mm;   /* 2 × 80mm */
+  height: 200mm;   /* 4 × 50mm */
   display: grid;
-  grid-template-columns: repeat(2, 50mm);
-  grid-template-rows: repeat(4, 80mm);
+  grid-template-columns: repeat(2, 80mm);
+  grid-template-rows:    repeat(4, 50mm);
 }
 
-/* ── Label cell: exact 50×80mm ── */
+/* ════════════════════════════════
+   LABEL CELL
+   Physical: 80mm (W) × 50mm (H)  ← landscape on paper
+   Visual content designed landscape
+   ════════════════════════════════ */
 .label-cell {
-  width: 50mm;
-  height: 80mm;
-  padding: 3mm 3mm 2mm 3mm;
+  width: 80mm;
+  height: 50mm;
+  padding: 3mm 4mm 2.5mm 4mm;
   display: flex;
   flex-direction: column;
-  border: 1px dashed #ccc;
-  position: relative;
   overflow: hidden;
+  position: relative;
 }
 
-.label-empty {
-  background: #fafafa;
-}
-
-/* Label number */
+/* ─── Label number (screen only) ─── */
 .label-number {
   position: absolute;
-  top: 1.5mm; right: 1.5mm;
+  top: 1.8mm; right: 2.5mm;
   font-size: 5pt;
-  color: #bbb;
+  color: #b8c2cc;
+  letter-spacing: .3px;
 }
 
-/* Sender block — เอาไว้ใน CSS สำหรับใช้ในอนาคต ถ้าต้องการ */
-.label-from {
-  display: none;  /* ไม่แสดง FROM */
+/* ─── TO header ─── */
+.label-to-block {
+  display: flex;
+  align-items: center;
+  gap: 1.8mm;
+  padding-bottom: 1.5mm;
+  margin-bottom: 1.8mm;
+  border-bottom: 0.4pt solid #bcc4ce;
 }
 
-/* TO block */
+.label-to-dot {
+  width: 1.8mm;
+  height: 1.8mm;
+  background: #333;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .label-to-title {
-  font-size: 6pt;
-  font-weight: bold;
-  color: #333;
+  font-size: 5.5pt;
+  font-weight: 700;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
-  margin-bottom: 1.5mm;
-  letter-spacing: 0.5px;
+  color: #555;
 }
 
+/* ─── Company ─── */
 .label-company {
-  font-size: 10pt;
-  font-weight: bold;
-  color: #000;
-  line-height: 1.3;
-  margin-bottom: 1.5mm;
+  font-size: 9pt;
+  font-weight: 700;
+  color: #050505;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  margin-bottom: 1.2mm;
+  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.label-contact {
-  font-size: 8pt;
-  color: #333;
-  margin-bottom: 0.5mm;
+/* ─── Contact + Position (inline row) ─── */
+.label-contact-row {
+  font-size: 7pt;
+  color: #222;
+  margin-bottom: 1.2mm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .label-pos {
   color: #666;
+  font-style: italic;
 }
 
+/* ─── Address ─── */
 .label-address {
-  font-size: 8pt;
+  font-size: 7.5pt;
   color: #111;
-  line-height: 1.6;
+  line-height: 1.65;
   flex-grow: 1;
+  word-break: break-word;
 }
 
-/* Footer */
+/* ─── Footer ─── */
 .label-footer {
   margin-top: auto;
   padding-top: 1.5mm;
-  border-top: 0.5px solid #ccc;
+  border-top: 0.4pt solid #bcc4ce;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 4.5mm;
 }
 
 .badge-ems {
-  background: #e74c3c;
-  color: white;
-  font-size: 6pt;
-  font-weight: bold;
-  padding: 0.5mm 2mm;
-  border-radius: 2px;
-  letter-spacing: 0.5px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 5.5pt;
+  font-weight: 700;
+  padding: 0.4mm 2mm;
+  border-radius: 1.2mm;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .badge-note {
   font-size: 5.5pt;
-  color: #555;
-  font-style: italic;
+  font-weight: 600;
+  color: #444;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }

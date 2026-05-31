@@ -4,6 +4,7 @@
 // Ricoh IM C2010 | Label A15 (100x150mm)
 // ============================================
 require_once 'includes/config.php';
+auth_check();
 
 $db = getDB();
 
@@ -17,10 +18,21 @@ $where  = "WHERE (company != '' OR contact != '' OR address != '')";
 $params = [];
 
 if ($search !== '') {
-    $where  .= " AND (company LIKE :s OR contact LIKE :s2 OR address LIKE :s3)";
-    $params[':s']  = "%$search%";
-    $params[':s2'] = "%$search%";
-    $params[':s3'] = "%$search%";
+    if (mb_strlen($search) >= 3) {
+        // FULLTEXT boolean mode — prefix each word with * for partial matching
+        $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY);
+        $ft    = implode(' ', array_map(
+            fn($t) => preg_replace('/[+\-><()~*"@]/', '', $t) . '*',
+            $terms
+        ));
+        $where .= " AND MATCH(company, contact, address) AGAINST (:ft IN BOOLEAN MODE)";
+        $params[':ft'] = $ft;
+    } else {
+        $where  .= " AND (company LIKE :s OR contact LIKE :s2 OR address LIKE :s3)";
+        $params[':s']  = "%$search%";
+        $params[':s2'] = "%$search%";
+        $params[':s3'] = "%$search%";
+    }
 }
 
 $total = $db->prepare("SELECT COUNT(*) FROM label_billing $where");
@@ -90,10 +102,37 @@ if (isset($_POST['del'])) {
         <i class="bi bi-x-circle"></i> ล้างทั้งหมด
       </button>
     </form>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
+    <a href="logout.php" class="btn-nav btn-nav-clear" title="ออกจากระบบ"
+       onclick="return confirm('ออกจากระบบ?')">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="d-none d-md-inline"><?= htmlspecialchars($_SESSION['login_user'] ?? '') ?></span>
+    </a>
   </div>
 </nav>
 
-
+<!-- Sticky Action Bar -->
+<div id="actionBar" class="action-bar" style="display:none">
+  <span class="text-white fs-6">
+    <i class="bi bi-check2-square me-2 text-warning"></i>
+    เลือก <strong id="actionCount">0</strong> รายการ
+  </span>
+  <div class="d-flex gap-2">
+    <a href="print_preview.php" target="_blank"
+       class="btn btn-warning btn-sm fw-bold px-3">
+      <i class="bi bi-printer-fill me-1"></i> พิมพ์ที่เลือก
+    </a>
+    <form method="post" class="d-inline"
+          onsubmit="return confirm('ล้างรายการที่เลือกทั้งหมด?')">
+      <input type="hidden" name="csrf_token"
+             value="<?= htmlspecialchars(csrf_token()) ?>">
+      <button type="submit" name="clear_all" value="1"
+              class="btn btn-outline-light btn-sm px-3">
+        <i class="bi bi-x-circle me-1"></i> ล้างทั้งหมด
+      </button>
+    </form>
+  </div>
+</div>
 
 <div class="container-fluid py-4">
 
@@ -159,9 +198,10 @@ if (isset($_POST['del'])) {
         <button onclick="selectAllPage(false)" class="btn-toolbar btn btn-outline-secondary">
           <i class="bi bi-x-square"></i> &nbsp;&nbsp;ยกเลิก
         </button>
-        <a href="edit.php" class="btn-toolbar btn btn-success">
+        <button class="btn-toolbar btn btn-success"
+                data-bs-toggle="modal" data-bs-target="#addModal">
           <i class="bi bi-plus-lg me-1"></i>เพิ่มรายชื่อ
-        </a>
+        </button>
       </div>
     </div>
 
@@ -239,8 +279,6 @@ if (isset($_POST['del'])) {
 
   </div>
 </div>
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/handsontable@14/dist/handsontable.full.min.js"></script>
@@ -354,8 +392,8 @@ const hot = new Handsontable(document.getElementById('hot-container'), {
       fetch('api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'toggle', id: hotData[row].id, val: newVal ? 1 : 0 })
-      });
+        body: JSON.stringify({ action: 'toggle', id: hotData[row].id, val: newVal ? 1 : 0, csrf: CSRF_TOKEN })
+      }).catch(() => console.error('toggle failed'));
       updateBadge();
     });
   },
@@ -370,7 +408,10 @@ document.getElementById('hot-container').addEventListener('click', e => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'delete', id: +btn.dataset.id, csrf: CSRF_TOKEN })
-  }).then(r => r.json()).then(d => { if (d.ok) location.reload(); });
+  }).then(r => r.json()).then(d => {
+    if (d.ok) location.reload();
+    else alert('ลบไม่สำเร็จ: ' + (d.error ?? 'unknown error'));
+  }).catch(() => alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'));
 });
 
 // ── Select all / none on page ────────────────────────
@@ -380,8 +421,8 @@ function selectAllPage(checked) {
   fetch('api.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'toggle_many', ids: hotData.map(r => r.id), val: checked ? 1 : 0 })
-  }).then(() => updateBadge());
+    body: JSON.stringify({ action: 'toggle_many', ids: hotData.map(r => r.id), val: checked ? 1 : 0, csrf: CSRF_TOKEN })
+  }).then(() => updateBadge()).catch(() => console.error('toggle_many failed'));
 }
 
 // ── Sync badge + stat card ───────────────────────────
@@ -397,8 +438,158 @@ function updateBadge() {
     if (badge) { badge.textContent = d.count + ' รายการ'; badge.style.display = d.count > 0 ? '' : 'none'; }
     const stat = document.getElementById('statSelected');
     if (stat) stat.textContent = d.count.toLocaleString();
+    updateActionBar(d.count);
   });
 }
+
+// ── Sticky Action Bar ────────────────────────────────
+function updateActionBar(count) {
+  const bar = document.getElementById('actionBar');
+  const cnt = document.getElementById('actionCount');
+  if (!bar) return;
+  if (count > 0) {
+    cnt.textContent = count;
+    bar.style.display = 'flex';
+    document.body.classList.add('has-action-bar');
+  } else {
+    bar.style.display = 'none';
+    document.body.classList.remove('has-action-bar');
+  }
+}
+
+// ── Initial state on page load ───────────────────────
+updateActionBar(<?= (int)$selectedCount ?>);
+// ── Add Modal ────────────────────────────────────────
+function submitAddForm() {
+  const form  = document.getElementById('addForm');
+  const btn   = document.getElementById('addSubmitBtn');
+  const err   = document.getElementById('addError');
+  const company = form.company.value.trim();
+  const address = form.address.value.trim();
+
+  err.classList.add('d-none');
+
+  if (!company && !address) {
+    err.textContent = 'กรุณากรอกชื่อบริษัท หรือที่อยู่อย่างน้อยหนึ่งอย่าง';
+    err.classList.remove('d-none');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>กำลังบันทึก...';
+
+  fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action:       'add',
+      csrf:         CSRF_TOKEN,
+      company:      company,
+      contact:      form.contact.value.trim(),
+      position:     form.position.value.trim(),
+      address:      address,
+      ems:          form.ems.value,
+      billing_note: form.billing_note.value,
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) { location.reload(); return; }
+    err.textContent = d.error ?? 'เกิดข้อผิดพลาด';
+    err.classList.remove('d-none');
+  })
+  .catch(() => {
+    err.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+    err.classList.remove('d-none');
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>บันทึก';
+  });
+}
+
+document.getElementById('addModal').addEventListener('hidden.bs.modal', () => {
+  document.getElementById('addForm').reset();
+  document.getElementById('addError').classList.add('d-none');
+});
 </script>
+
+<!-- ── Add Modal ──────────────────────────────────── -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;border:none">
+
+      <div class="modal-header border-0 py-3 px-4"
+           style="background:linear-gradient(120deg,#4f46e5 0%,#7c3aed 100%)">
+        <h5 class="modal-title text-white fw-bold" id="addModalLabel">
+          <i class="bi bi-plus-circle me-2"></i>เพิ่มรายชื่อใหม่
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div id="addError" class="alert alert-danger py-2 d-none"></div>
+        <form id="addForm" onsubmit="return false">
+
+          <div class="mb-3">
+            <label class="form-label">ชื่อบริษัท / Company <span class="text-danger">*</span></label>
+            <input type="text" name="company" class="form-control" autofocus>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">ชื่อผู้ติดต่อ / Contact</label>
+              <input type="text" name="contact" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ตำแหน่ง / Position</label>
+              <input type="text" name="position" class="form-control">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">ที่อยู่ / Address <span class="text-danger">*</span></label>
+            <textarea name="address" class="form-control" rows="3"></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">ประเภทจัดส่ง / EMS</label>
+              <select name="ems" class="form-select">
+                <option value="">-- ไม่ระบุ --</option>
+                <option>EMS</option>
+                <option>ลงทะเบียน</option>
+                <option>พัสดุ</option>
+                <option>ไปรษณีย์ธรรมดา</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">หมายเหตุ / Note</label>
+              <select name="billing_note" class="form-select">
+                <option value="">-- ไม่ระบุ --</option>
+                <option>BILLING NOTE</option>
+                <option>TAX INVOICE</option>
+                <option>RECEIPT</option>
+                <option>QUOTATION</option>
+              </select>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer border-top px-4 py-3" style="background:#fafbfd">
+        <button type="button" class="btn btn-outline-secondary px-4"
+                data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" id="addSubmitBtn" class="btn btn-primary px-4"
+                onclick="submitAddForm()">
+          <i class="bi bi-save me-1"></i>บันทึก
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
